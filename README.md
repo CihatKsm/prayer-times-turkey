@@ -6,7 +6,7 @@
 
 #### Örnek Kullanım:
 ```js
-const quake = require('prayer-times-turkey')
+const prayer = require('prayer-times-turkey')
 const date = () => new Date()
 
 console.log(date(), 'System opened!')
