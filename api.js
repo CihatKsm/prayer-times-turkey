@@ -1,29 +1,36 @@
 const { default: axios } = require("axios");
-
+const url = (place) => `https://www.sabah.com.tr/${place}-namaz-vakitleri`;
 
 module.exports = async (data) => {
-    if (!data?.place && !data?.plate) return '⚠️ The feature of seeing all provinces is not active at the moment.'
-    let places = require('./places').map(m => { return { name: nameFix(m.name), plate: m.plate } })
-    if (data?.place) places = places.filter(f => f.name == nameFix(data.place))
-    if (!data?.place && data?.plate) places = places.filter(f => f.plate == data?.plate)
-    let datas = []
-    if (places.length == 0) return data?.place ? null : [];
+    if (!data?.place && !data?.plate) return null;
+    let _place;
+    const places = require('./places').map(m => { return { name: nameFix(m.name), plate: m.plate } });
+    if (data?.plate) _place = places.find(f => f.plate == data?.plate);
+    if (data?.place) _place = places.find(f => f.name == nameFix(data.place));
+    if (!_place) return null; 
 
-    for (let _place of places) {
-        const place = require('./places').find(f => f.plate == _place.plate)
-        const api = await axios({ method: 'get', url: getURL(_place.name) }).catch((e) => null)
-        const times = getTimes(api?.data)
-        datas.push({ place, times })
-    }
+    const place = require('./places').find(f => f.plate == _place.plate);
+    const api = await axios({ method: 'get', url: url(_place.name) }).catch((e) => null);
+    const times = getTimes(api?.data);
+    const fTime = (name) => times.find(f => f.name == name).time;
 
-    if (data?.place || data?.plate) return datas[0];
-    return datas;
+    const getMinute = (x) => x.split(':').map(m => Number(m)).reduce((a, b) => a * 60 + b)
+    const rtc = (x) => x < 0 ? false : Math.floor(x / 60) + ' saat ' + x % 60 + ' dakika kaldı.'
+
+    const iftarStatus = rtc(getMinute(fTime('Akşam')) - getMinute(getNowTime()))
+    const sahurStatus = iftarStatus ? false : rtc(((24 * 60) - getMinute(getNowTime())) + getMinute(fTime('İmsak')))
+
+    const iftar = { name: 'İftar', time: iftarStatus ? iftarStatus : true }
+    const sahur = { name: 'Sahur', time: sahurStatus ? sahurStatus : false }
+    const remainingTimes = [iftar, sahur]
+    return { place, times, remainingTimes };
 };
 
-function nameFix(name) {
-    return name.toLowerCase()
-        .replaceAll(`i̇`, 'i').replaceAll('i', 'i').replaceAll('ı', 'i').replaceAll('ğ', 'g')
-        .replaceAll('ü', 'u').replaceAll('ş', 's').replaceAll('ö', 'o').replaceAll('ç', 'c')
+function nameFix(_name) {
+    let name = String(_name)?.toLowerCase() || null;
+    const fixs = [['i̇', 'i'], ['ı', 'i'], ['ğ', 'g'], ['ü', 'u'], ['ş', 's'], ['ö', 'o'], ['ç', 'c']]
+    for (let fix of fixs) name = name?.replaceAll(fix[0], fix[1])
+    return name;
 }
 
 function getTimes(_datas) {
@@ -37,6 +44,9 @@ function getTimes(_datas) {
     return times;
 }
 
-function getURL(place) {
-    return `https://www.sabah.com.tr/${place}-namaz-vakitleri`
+function getNowTime () {
+    const input = new Date();
+    const formatter = new Intl.DateTimeFormat("tr", { dateStyle: "short", timeStyle: "medium", timeZone: 'Europe/Istanbul' });
+    const formated = formatter.format(input).split(' ')[1].split(':').slice(0,2).join(':')
+    return formated;
 }

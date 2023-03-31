@@ -23,15 +23,19 @@ setTimeout(async () => {
 #### Örnek Çıktı:
 ```json
 {
-  "place": { "name": "Kocaeli", "plate": "41" },
-  "times": [
-      { "name": "İmsak", "time": "05:22" },
-      { "name": "Güneş", "time": "06:48" },
-      { "name": "Öğle", "time": "13:11" },
-      { "name": "İkindi", "time": "16:40" },
-      { "name": "Akşam", "time": "19:25" },
-      { "name": "Yatsı", "time": "20:45" }
-  ]
+    "place": { "name": "Kocaeli", "plate": "41" },
+    "times": [
+        { "name": "İmsak", "time": "05:13" },
+        { "name": "Güneş", "time": "06:40" },
+        { "name": "Öğle", "time": "13:10" },
+        { "name": "İkindi", "time": "16:42" },
+        { "name": "Akşam", "time": "19:30" },
+        { "name": "Yatsı", "time": "20:51" }
+    ],
+    "remainingTimes": [
+        { "name": "İftar", "time": true },
+        { "name": "Sahur", "time": "8 saat 33 dakika kaldı." }
+    ]
 }
 ```
 
