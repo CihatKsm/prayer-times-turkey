@@ -7,18 +7,22 @@ module.exports = async (data) => {
     const places = require('./places').map(m => { return { name: nameFix(m.name), plate: m.plate } });
     if (data?.plate) _place = places.find(f => f.plate == data?.plate);
     if (data?.place) _place = places.find(f => f.name == nameFix(data.place));
-    if (!_place) return null; 
+    if (!_place) return null;
 
     const place = require('./places').find(f => f.plate == _place.plate);
     const api = await axios({ method: 'get', url: url(_place.name) }).catch((e) => null);
     const times = getTimes(api?.data);
     const fTime = (name) => times.find(f => f.name == name).time;
 
-    const getMinute = (x) => x.split(':').map(m => Number(m)).reduce((a, b) => a * 60 + b)
-    const rtc = (x) => x < 0 ? false : Math.floor(x / 60) + ' saat ' + x % 60 + ' dakika kaldı.'
+    const minute = (x) => x.split(':').map(m => Number(m)).reduce((a, b) => a * 60 + b)
+    const rtc = (x) => x < 0 ? true : (Math.floor(x / 60) > 0 ? Math.floor(x / 60) + ' saat ' : '') + x % 60 + ' dakika kaldı.'
 
-    const iftarStatus = rtc(getMinute(fTime('Akşam')) - getMinute(getNowTime()))
-    const sahurStatus = iftarStatus ? false : rtc(((24 * 60) - getMinute(getNowTime())) + getMinute(fTime('İmsak')))
+    const iftarStatus = minute(now()) > minute(fTime('İmsak')) ? rtc(minute(fTime('Akşam')) - minute(now())) : true;
+
+    const sahurStatus = minute(now()) > minute(fTime('Akşam')) || minute(now()) < minute(fTime('İmsak')) ?
+        minute(fTime('İmsak')) - minute(now()) > 0 ?
+            rtc(minute(fTime('İmsak')) - minute(now())) :
+            rtc(((24 * 60) - minute(now())) + minute(fTime('İmsak'))) : false;
 
     const iftar = { name: 'İftar', time: iftarStatus ? iftarStatus : true }
     const sahur = { name: 'Sahur', time: sahurStatus ? sahurStatus : false }
@@ -44,9 +48,9 @@ function getTimes(_datas) {
     return times;
 }
 
-function getNowTime () {
+function now() {
     const input = new Date();
     const formatter = new Intl.DateTimeFormat("tr", { dateStyle: "short", timeStyle: "medium", timeZone: 'Europe/Istanbul' });
-    const formated = formatter.format(input).split(' ')[1].split(':').slice(0,2).join(':')
+    const formated = formatter.format(input).split(' ')[1].split(':').slice(0, 2).join(':')
     return formated;
 }
