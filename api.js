@@ -37,20 +37,16 @@ function nameFix(_name) {
     return name;
 }
 
-function getTimes(_datas) {
-    const x = '<div class="vakitler boxShadowSet">', y = '</div>'
-    const datas = _datas?.slice(_datas.indexOf(x) + x.length)
-    const _data = datas?.slice(0, datas.indexOf(y))
-    const data = _data.split('\r\n').filter(f => f.includes('<strong>') || f.includes('<span>')).map(m => m.trim()).join('')
-    const times = data.split('</span><strong>')
-        .map(m => m.replace('<strong>', '').replace('</strong>', ' ').replace('<span>', '').replace('</span>', '').trim())
-        .map(m => { return { name: m.split(' ')[0], time: m.split(' ')[1] } })
+function getTimes(html, x = '<div class="vakitler boxShadowSet">', y = '</div>') {
+    const a = html?.slice(html.indexOf(x) + x.length)
+    const b = a?.slice(0, a.indexOf(y))
+    const c = b?.split('\r\n')?.filter(f => f.includes('<strong>') || f.includes('<span>')).map(m => m.trim())?.join('')
+    const d = c?.replaceAll('</strong><span>', ':')?.replaceAll('</span><strong>', '|')?.replaceAll('<strong>', '')?.replaceAll('</span>', '')
+    const times = d?.split('|')?.map(m => m.split(':'))?.map(m => { return { name: m[0], time: m[1]+':'+m[2] } }) || [];
     return times;
 }
 
 function now() {
-    const input = new Date();
     const formatter = new Intl.DateTimeFormat("tr", { dateStyle: "short", timeStyle: "medium", timeZone: 'Europe/Istanbul' });
-    const formated = formatter.format(input).split(' ')[1].split(':').slice(0, 2).join(':')
-    return formated;
+    return formatter.format(new Date()).split(' ')[1].split(':').slice(0, 2).join(':');
 }
