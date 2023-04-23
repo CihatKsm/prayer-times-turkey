@@ -1,5 +1,6 @@
 const { default: axios } = require("axios");
 const cheerio = require('cheerio');
+const hijriCalendar = require('./hijriCalendar');
 
 module.exports = async (data) => {
     const places = require('./places').map(m => { return { name: m.name.toLowerCase(), plate: m.plate } });
@@ -15,8 +16,12 @@ module.exports = async (data) => {
 
     $('tr').slice(1).each((i, e) => {
         const text = (x) => $(e).find('td').eq(x).text();
-        datas.push({
-            place: { name: text(0), plate: require('./places').find(f => f.name == text(0))?.plate },
+        const name = text(0).replaceAll('â', 'a');
+        const plate = require('./places').find(f => f.name == name)?.plate;
+        
+        let prayerData = {
+            place: { name, plate },
+            hijriCalendar: hijriCalendar.date,
             times: [
                 { name: 'İmsak', time: text(1) },
                 { name: 'Güneş', time: text(2) },
@@ -25,14 +30,18 @@ module.exports = async (data) => {
                 { name: 'Akşam', time: text(5) },
                 { name: 'Yatsı', time: text(6) },
             ],
-            remainingTimes: [
-                { name: 'İftar', time: iftarTime(text(1), text(5)) },
-                { name: 'Sahur', time: sahurTime(text(1), text(5)) },
-            ]
-        })
+            remainingTimes: [],
+        }
+
+        if (hijriCalendar.month == 'Ramazan') {
+            prayerData.remainingTimes.push({ name: 'İftar', time: iftarTime(text(1), text(5)) })
+            prayerData.remainingTimes.push({ name: 'Sahur', time: sahurTime(text(1), text(5)) })
+        }
+
+        datas.push(prayerData)
     })
-    
-    return datas.find(f => f.place.plate == place.plate)
+
+    return datas.find(f => f.place.plate === place.plate)
 }
 
 const minute = (x) => x.split(':').map(m => Number(m)).reduce((a, b) => a * 60 + b);

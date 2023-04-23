@@ -33,8 +33,8 @@ setTimeout(async () => {
         { "name": "Yatsı", "time": "20:51" }
     ],
     "remainingTimes": [
-        { "name": "İftar", "time": "35 dakika kaldı." },
-        { "name": "Sahur", "time": false }
+        { "name": "İftar", "time": "35 dakika kaldı." }, // İftar bilgisi sadece ramazanda mevcuttur.
+        { "name": "Sahur", "time": false } // Sahur bilgisi sadece ramazanda mevcuttur.
     ]
 }
 ```
